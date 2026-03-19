@@ -1,0 +1,54 @@
+name: JIT Defect Prediction
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install transformers torch numpy pandas huggingface_hub
+
+      - name: Extract commit features
+        run: python extract_features.py
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
+      - name: Run defect prediction
+        run: python predict.py
+        env:
+          HF_MODEL_REPO: Preksha172/jit-defect-prediction-codebert
+
+      - name: Post risk comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const result = JSON.parse(fs.readFileSync('prediction_result.json', 'utf8'));
+            const emoji = result.risk === 'HIGH' ? '🔴' : result.risk === 'MEDIUM' ? '🟡' : '🟢';
+            const body = `## ${emoji} Defect Prediction Result\n\n` +
+              `**Risk Level:** ${result.risk}\n` +
+              `**Defect Probability:** ${(result.probability * 100).toFixed(1)}%\n\n` +
+              `> Predicted by CodeBERT v2 — JIT Defect Prediction Model`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
