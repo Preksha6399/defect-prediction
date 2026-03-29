@@ -108,8 +108,3 @@ with open('features.json', 'w') as f:
     json.dump(features, f)
 
 print("Saved to features.json")
-```
-
-Commit message:
-```
-Add feature extraction script
