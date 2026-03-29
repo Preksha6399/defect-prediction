@@ -26,12 +26,12 @@ jobs:
           pip install transformers torch numpy pandas huggingface_hub
 
       - name: Extract commit features
-        run: python extract_features.py
+        run: python $GITHUB_WORKSPACE/extract_features.py
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
 
       - name: Run defect prediction
-        run: python predict.py
+        run: python $GITHUB_WORKSPACE/predict.py
         env:
           HF_MODEL_REPO: Preksha172/jit-defect-prediction-codebert
 
