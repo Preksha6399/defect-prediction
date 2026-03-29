@@ -82,4 +82,3 @@ with open('prediction_result.json', 'w') as f:
 
 print("Saved to prediction_result.json")
 
-└── README.md
